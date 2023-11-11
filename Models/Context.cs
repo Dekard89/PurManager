@@ -14,12 +14,12 @@ namespace PurchaseManager.Models
 
        public DbSet<Buyer> buyers { get; set; }
 
-        private ConnectionString connectionString;
+       
 
 
        public Context()
         {
-           
+            Database.EnsureDeleted();
 
             Database.EnsureCreated();
 
@@ -28,6 +28,8 @@ namespace PurchaseManager.Models
         {
             optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=usersdb;Username=postgres;Password=696");
         }
+
+      
 
     }
 }

@@ -18,8 +18,9 @@ namespace PurchaseManager.Models
         public double Cost { get; set; }
 
 
-        public int ProviderId;
-        
+        public int ProviderId {get; set; }
+             
+            
         
 
         public Product( string name,double cost)

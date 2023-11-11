@@ -87,11 +87,11 @@ namespace PurchaseManager.Models
             Product? result = null;
             using (var db = new Context())
             {
-                result = db.products.FirstOrDefault();
+                result = db.products.FirstOrDefault(x=>x.Name==name);
             }
             return result;
         }
-        public Buyer AddBuyer(string buyerName, int consuption)
+        public void AddBuyer(string buyerName, int consuption)
         {
             using (var db = new Context())
             {
@@ -101,7 +101,7 @@ namespace PurchaseManager.Models
                 db.buyers.Add(b);
                 db.SaveChanges();
                 DataHandler?.Invoke($"Покупатель {b} добавлен");
-                return b;
+                
             }
         }
         public void DeleteBuyer(string buyerName)
@@ -113,6 +113,25 @@ namespace PurchaseManager.Models
                 db.SaveChanges() ;
                 DataHandler?.Invoke($"Покупатель {b} удален");
             }
+        }
+        public List<Product> GetAllRange()
+        {
+            using(var db=new Context())
+            {
+                var p = db.products.ToList();
+                return p;
+            }
+        }
+        public Buyer GetBuyer(string buyerName)
+        {
+            
+            using (var db = new Context())
+            {
+               var result = db.buyers.FirstOrDefault(x=>x.Name==buyerName);
+
+                return result;
+            }
+            
         }
        
 

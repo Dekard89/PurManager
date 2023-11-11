@@ -11,21 +11,25 @@ namespace PurchaseManager.Service
 {
     public class Stock
     {
-        DataService dataService { get; set; }
-        public List<Purchase> Purhses { get; }
+        public DataService dataService;
+        public List<Purchase> Purhses { get; set; }
         
-        public Dictionary<Buyer,List<Purchase>> BuyerList { get; }
+        public Dictionary<Buyer,List<Purchase>> BuyerList { get; set; }
 
         public event Action<string> StockHandler;
 
         public Report report;
 
+        public double Markup;
+
         public Stock()
         {
+           
             Purhses = new List<Purchase>();
             dataService = new DataService();
             BuyerList = new Dictionary<Buyer, List<Purchase>>();
             report=new Report();
+            Markup = 10;
         }   
 
         public void ShowAllPurchses(List<Purchase> list)
@@ -35,8 +39,9 @@ namespace PurchaseManager.Service
             
         }
 
-        public void AddPurchase(Purchase purchase)
+        public void AddPurchase(string name, int quantity)
         {
+            var purchase=CreatePurchase(dataService.GetProduct(name),quantity);
             var isCopy=Purhses.Any(x=>x.product.Name==purchase.product.Name);
 
             if (isCopy == true)
@@ -57,48 +62,19 @@ namespace PurchaseManager.Service
             Purhses.Remove(purchase);
             report.Bank += purchase.Total;
         }
-        public Purchase? CreatePurchase(Product product, int quantity=1)
+        public Purchase? CreatePurchase(Product product, int quantity)
         {
             return new Purchase(product,quantity);
         }
         
         
-        private Purchase? GetPurchase(string name)
+        public Purchase? GetPurchase(string name)
         {
             var p = Purhses.FirstOrDefault(p => p.product.Name == name);
 
             return p;
         }
-        public void InstallBayerList()
-        {
-            var bayer1 = dataService.AddBuyer("Покупатель1", 2);
-
-            var bl1 = new List<Purchase>();
-
-            using(var bd =new Context())
-            {
-                var list1 = bd.products.Where(x => x.ProductId < 5).ToList();
-                foreach(var prod in list1)
-                {
-                    bl1.Add(CreatePurchase(prod, 2));
-                }
-                BuyerList.Add(bayer1, bl1);
-            }
-            var bayer2 = dataService.AddBuyer("Покупатель2", 1);
-
-            var bl2 = new List<Purchase>();
-
-            using (var bd = new Context())
-            {
-                var list2 = bd.products.Where(x => x.ProductId > 5).ToList();
-                foreach (var prod in list2)
-                {
-                    bl1.Add(CreatePurchase(prod, 1));
-                }
-                BuyerList.Add(bayer2, bl2);
-            }
-
-        }
+        
 
         public void GetBalance(List<Purchase> purchaseList)
         {
@@ -134,7 +110,8 @@ namespace PurchaseManager.Service
             if(isCopy==true)
             {
                 var pur = purchaseList.FirstOrDefault(x => x.product.Name == purchase.product.Name);
-                pur.Quantity += purchase.Quantity;
+                pur.Quantity += purchase.Quantity ;
+                report.Bank += purchase.Total + Markup;
 
             }
             else
@@ -150,10 +127,11 @@ namespace PurchaseManager.Service
                         if (p.Quantity > o.Quantity)
                         {
                             p.Quantity -= o.Quantity;
-                            report.Bank += o.Total;
+                            report.Bank += o.Total + Markup;
                         }
                         else
                             DeletePurchase(p);
+
                 }
             
         }
@@ -163,8 +141,19 @@ namespace PurchaseManager.Service
                 foreach(var p in buyer.Value)
                 {
                     p.Quantity -= buyer.Key.Consumption;
+                    ClearPurchase(buyer.Value);
                 }
             report.ExportToJson(report);
+        }
+        public void BuyAllRange( int quantity)
+        {
+            var list = dataService.GetAllRange();
+            foreach(var p in list)
+            {
+                
+                Purhses.Add(CreatePurchase(p, quantity));
+                report.Bank -= p.Cost * quantity;
+            }
         }
 
       
